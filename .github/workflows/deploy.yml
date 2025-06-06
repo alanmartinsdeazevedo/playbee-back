@@ -40,15 +40,15 @@ jobs:
     - name: Build Docker image
       run: |
         echo "🔨 Building PlayBee Backend version ${{ steps.version.outputs.VERSION }}"
-        docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }} .
-        docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_BACKEND_IMAGE }}:latest .
+        docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }} .
+        docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_IMAGE }}:latest .
 
     # Push para Docker Hub
     - name: Push Docker
       run: |
         echo "📤 Pushing PlayBee Backend version ${{ steps.version.outputs.VERSION }}"
-        docker push ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
-        docker push ${{ secrets.DOCKER_BACKEND_IMAGE }}:latest
+        docker push ${{ secrets.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }}
+        docker push ${{ secrets.DOCKER_IMAGE }}:latest
 
     - name: Install SSH client
       run: sudo apt-get install -y openssh-client

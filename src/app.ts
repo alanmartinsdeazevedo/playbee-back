@@ -14,7 +14,7 @@ app.setSerializerCompiler(serializerCompiler)
 
 app.register(cors, {
     origin: [
-        'http://localhost:3001',        // Frontend
+        'http://localhost:3000',        // Frontend
         'http://127.0.0.1:3000',        // localhost
         'http://play.beezes.com.br'     // Produção
     ],
