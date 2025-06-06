@@ -18,7 +18,8 @@ COPY --chown=fastify:nodejs ./src ./src
 COPY --chown=fastify:nodejs ./prisma ./prisma
 COPY --chown=fastify:nodejs package*.json ./
 
-RUN npx prisma generate
+COPY .docker/node/entrypoint.sh ./
+RUN chmod +x entrypoint.sh
 
 USER fastify
 EXPOSE 3003
