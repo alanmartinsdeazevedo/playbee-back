@@ -72,7 +72,7 @@ jobs:
           docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
 
           # Pull nova versão
-          docker pull ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
+          docker pull ${{ secrets.DOCKER_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
 
           # Backup do container atual
           docker stop playbee-backend || true
@@ -85,7 +85,7 @@ jobs:
             -e PORT="3333" \
             -e NODE_ENV="production" \
             --restart unless-stopped \
-            ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
+            ${{ secrets.DOCKER_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
 
           # Aguardar inicialização
           sleep 15
@@ -126,5 +126,5 @@ jobs:
 
           # Limpeza de imagens antigas
           echo "🧹 Cleaning old backend images..."
-          docker images ${{ secrets.DOCKER_BACKEND_IMAGE }} --format "{{.Tag}}" | grep -E "^(v|main-)" | sort -V | head -n -5 | xargs -I {} docker rmi ${{ secrets.DOCKER_BACKEND_IMAGE }}:{} 2>/dev/null || true
+          docker images ${{ secrets.DOCKER_IMAGE_NAME }} --format "{{.Tag}}" | grep -E "^(v|main-)" | sort -V | head -n -5 | xargs -I {} docker rmi ${{ secrets.DOCKER_IMAGE_NAME }}:{} 2>/dev/null || true
         '
