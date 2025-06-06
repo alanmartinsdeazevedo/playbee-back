@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Court {
+  id          String     @id @default(uuid())
+  nome        String
+  tipo        String
+  localizacao String
+
+  reservas    Schedule[]  // Relacionamento 1:N
+
+  @@map("court")
+}
+
+model Schedule {
+  id              String   @id @default(uuid())
+  dataHoraInicio  DateTime
+  dataHoraFim     DateTime
+  status          String
+
+  user_id         String
+  court_id        String
+
+  user            User    @relation(fields: [user_id], references: [id])
+  court           Court   @relation(fields: [court_id], references: [id])
+
+  @@map("schedule")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  nome      String
+  email     String    @unique
+  senha     String
+  telefone  String
+  role      String
+
+  reservas  Schedule[]  // Relacionamento 1:N
+
+    @@map("user")
+}

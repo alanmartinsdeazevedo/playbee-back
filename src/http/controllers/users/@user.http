@@ -1,0 +1,36 @@
+@baseURL = http://localhost:3333
+
+# @name CreateUser
+
+POST {{baseURL}}/users
+Content-Type: application/json
+
+{
+ "nome": "Mateus",
+ "email": "ARthuzinho@gmail.com",
+ "senha": "123123",
+ "telefone": "123123123",
+ "role": "admin"
+}
+
+###
+
+# @name GetAllUsers
+GET {{baseURL}}/users
+Accept: application/json
+
+###
+
+# @name UpdateUser
+PUT {{baseURL}}/users/ab0b48f1-6add-405e-8568-0d011b05848e
+Content-Type: application/json
+
+{
+  "nome": "Renato Atualizado",
+  "email": "mateus.atualizado@gmail.com",
+  "telefone": "999999999",
+  "role": "user"
+}
+
+### Delete User
+DELETE {{baseURL}}/users/9ff882bf-811b-46f5-8ca5-8258a5f524df

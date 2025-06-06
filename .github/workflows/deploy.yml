@@ -1,0 +1,130 @@
+name: PlayBee Backend - Deploy
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    if: github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Extrair versão da tag
+    - name: Extract version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/backend-v*.*.* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/backend-}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "🏷️ Deploying tagged version: $VERSION"
+        else
+          VERSION="main-$(echo $GITHUB_SHA | cut -c1-7)"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "🚀 Deploying main branch: $VERSION"
+        fi
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    # Build imagem Docker
+    - name: Build Docker image
+      run: |
+        echo "🔨 Building PlayBee Backend version ${{ steps.version.outputs.VERSION }}"
+        docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }} .
+        docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_BACKEND_IMAGE }}:latest .
+
+    # Push para Docker Hub
+    - name: Push Docker
+      run: |
+        echo "📤 Pushing PlayBee Backend version ${{ steps.version.outputs.VERSION }}"
+        docker push ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
+        docker push ${{ secrets.DOCKER_BACKEND_IMAGE }}:latest
+
+    - name: Install SSH client
+      run: sudo apt-get install -y openssh-client
+
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        sed -i '/^$/d' ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+
+    # Deploy EC2
+    - name: Deploy PlayBee Backend
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+          echo "🚀 Deploying PlayBee Backend version ${{ steps.version.outputs.VERSION }}"
+
+          docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+
+          # Pull da nova versão
+          docker pull ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
+
+          # Backup do container atual
+          docker stop playbee-backend || true
+          docker rename playbee-backend playbee-backend-backup-$(date +%s) || true
+
+          # Deploy da nova versão
+          docker run -d --name playbee-backend -p 3003:3003 \
+            -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            -e PORT="3333" \
+            -e NODE_ENV="production" \
+            --restart unless-stopped \
+            ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
+
+          # Aguardar inicialização
+          sleep 15
+
+          # Verificar se está funcionando
+          if docker ps | grep -q playbee-backend; then
+            echo "✅ Backend Deploy successful! Version ${{ steps.version.outputs.VERSION }} is running"
+            
+            # Teste de saúde da API
+            sleep 5
+            if curl -f http://localhost:3003/ > /dev/null 2>&1; then
+              echo "✅ Backend health check passed"
+            else
+              echo "⚠️ Backend health check failed, but container is running"
+            fi
+            
+            # Remover backup se tudo funcionou
+            docker rm playbee-backend-backup-* 2>/dev/null || true
+            
+            # Mostrar status
+            docker ps | grep playbee-backend
+            echo "📄 Backend logs:"
+            docker logs playbee-backend --tail 15
+          else
+            echo "❌ Backend Deploy failed! Rolling back..."
+            docker stop playbee-backend || true
+            docker rm playbee-backend || true
+
+            # Restaurar backup
+            BACKUP_CONTAINER=$(docker ps -a | grep playbee-backend-backup | head -1 | awk "{print \$1}")
+            if [ ! -z "$BACKUP_CONTAINER" ]; then
+              docker start $BACKUP_CONTAINER
+              docker rename $BACKUP_CONTAINER playbee-backend
+              echo "🔄 Backend Rollback completed"
+            fi
+            exit 1
+          fi
+
+          # Limpeza de imagens antigas
+          echo "🧹 Cleaning old backend images..."
+          docker images ${{ secrets.DOCKER_BACKEND_IMAGE }} --format "{{.Tag}}" | grep -E "^(v|main-)" | sort -V | head -n -5 | xargs -I {} docker rmi ${{ secrets.DOCKER_BACKEND_IMAGE }}:{} 2>/dev/null || true
+        '
