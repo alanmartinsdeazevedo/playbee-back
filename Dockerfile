@@ -16,6 +16,7 @@ RUN adduser --system --uid 1001 fastify
 COPY --from=deps /app/node_modules ./node_modules
 COPY --chown=fastify:nodejs ./src ./src
 COPY --chown=fastify:nodejs ./prisma ./prisma
+COPY --chown=fastify:nodejs tsconfig.json ./
 COPY --chown=fastify:nodejs package*.json ./
 
 COPY .docker/node/entrypoint.sh ./

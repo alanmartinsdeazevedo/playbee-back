@@ -1,3 +1,4 @@
+#!/bin/sh
 npx prisma generate
 npx prisma migrate deploy
-npm run start
+npx tsx src/server.ts
