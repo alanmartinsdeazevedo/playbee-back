@@ -71,7 +71,7 @@ jobs:
 
           docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
 
-          # Pull da nova versão
+          # Pull nova versão
           docker pull ${{ secrets.DOCKER_BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
 
           # Backup do container atual
