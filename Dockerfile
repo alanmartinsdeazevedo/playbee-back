@@ -23,4 +23,4 @@ RUN npx prisma generate
 USER fastify
 EXPOSE 3003
 
-CMD ["sh", "-c", "npx prisma db push && npx tsx -r tsconfig-paths/register src/server.ts"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx -r tsconfig-paths/register src/server.ts"]
