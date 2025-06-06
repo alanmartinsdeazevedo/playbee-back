@@ -82,7 +82,7 @@ jobs:
           docker run -d --name playbee-backend -p 3003:3003 \
             -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            -e PORT="3333" \
+            -e PORT="3003" \
             -e NODE_ENV="production" \
             --restart unless-stopped \
             ${{ secrets.DOCKER_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
