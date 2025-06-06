@@ -1,19 +1,41 @@
-# Etapa de build
-FROM node:lts-alpine AS builder
-RUN apk add --no-cache libc6-compat python3 make g++
+FROM node:lts-alpine AS base
+
+# Dependências
+FROM base AS deps
 WORKDIR /app
-COPY . .
+RUN apk add --no-cache libc6-compat python3 make g++
 COPY package*.json ./
-RUN npm install
+RUN npm ci
+
+FROM base AS builder
+WORKDIR /app
+
+# Copiar dependências da etapa anterior
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copiar código fonte
+COPY . .
+
+RUN npx prisma generate
+
 RUN npm run build
 
-# Etapa de produção
-FROM node:lts-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-EXPOSE 3000
-CMD ["npm", "start"]
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 fastify
+
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+COPY --from=builder --chown=fastify:nodejs /app/dist ./dist
+COPY --from=builder --chown=fastify:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=fastify:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+
+USER fastify
+
+EXPOSE 3003
+
+CMD ["npm", "run", "start:migrate"]
