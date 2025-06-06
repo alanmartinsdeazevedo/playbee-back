@@ -21,6 +21,6 @@ COPY --chown=fastify:nodejs package*.json ./
 RUN npx prisma generate
 
 USER fastify
-EXPOSE 3333
+EXPOSE 3003
 
 CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/server.ts"]
