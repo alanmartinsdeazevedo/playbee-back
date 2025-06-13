@@ -5,8 +5,6 @@ import { updateCourtController } from "./update-court-controller";
 import { getAllCourtsController } from "./getall-court-controller";
 import { deleteCourtController } from "./delete-court-controller";
 
-
-
 export const schemaCourtResponse = z.object({
     id: z.string(),
     nome: z.string(),
@@ -21,9 +19,9 @@ export async function routesCourt(app: FastifyInstance) {
             tags: ["Quadra"],
             body: schemaCreateCourt,
             response: {
-                    201: z.object({ court: schemaCreateCourt }),
-                    400: z.object({ message: z.string() }),
-                  },
+                201: z.object({ court: schemaCreateCourt }),
+                400: z.object({ message: z.string() }),
+            },
         },
     }, createCourtController)
 
@@ -50,15 +48,15 @@ export async function routesCourt(app: FastifyInstance) {
             tags: ["Quadra"],
             response: {
                 200: z.object({
-                    users: z.array(schemaCourtResponse),
+                    courts: z.array(schemaCourtResponse), // CORRIGIDO: era 'users', agora é 'courts'
                 }),
                 400: z.object({ message: z.string() }),
             },
         }
-    },getAllCourtsController)
+    }, getAllCourtsController)
 
-
-    app.delete("/court/:id", {
+    // CORRIGIDO: era '/court/:id', agora é '/courts/:id' para manter consistência
+    app.delete("/courts/:id", {
         schema:{
             description: "Deleta uma quadra",
             tags: ["Quadra"],
@@ -68,6 +66,5 @@ export async function routesCourt(app: FastifyInstance) {
               400: z.object({ message: z.string() }),
             },
         },
-    },deleteCourtController)
-
+    }, deleteCourtController)
 }

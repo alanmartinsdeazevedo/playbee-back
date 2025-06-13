@@ -4,7 +4,7 @@ import { HttpStatusCode } from "axios";
 import { makeDeleteScheduleUseCase } from "@/domain/reservation/@factories/make-delete-schedule-use-case";
 
 const schemaDeleteSchedule = z.object({
-  id: z.string(),
+  id: z.string().uuid(),
 });
 
 export async function deleteScheduleController(req: FastifyRequest, res: FastifyReply) {
@@ -12,7 +12,13 @@ export async function deleteScheduleController(req: FastifyRequest, res: Fastify
     const { id } = schemaDeleteSchedule.parse(req.params);
 
     const deleteScheduleUseCase = makeDeleteScheduleUseCase();
-    await deleteScheduleUseCase.execute(id);
+    const result = await deleteScheduleUseCase.execute(id);
+
+    if (result === null) {
+      return res.status(HttpStatusCode.NotFound).send({ 
+        message: "Reserva não encontrada" 
+      });
+    }
 
     return res.status(HttpStatusCode.NoContent).send();
   } catch (error) {

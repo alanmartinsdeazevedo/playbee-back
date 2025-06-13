@@ -5,8 +5,6 @@ import { deleteScheduleController } from "./delete-reservation-controller";
 import { getScheduleController } from "./get-reservation-controller";
 import { createScheduleController, schemaCreateSchedule } from "./create-reservation-controller";
 
-
-// Schema de resposta
 const schemaScheduleResponse = z.object({
   id: z.string(),
   dataHoraInicio: z.string().datetime(),
@@ -17,8 +15,7 @@ const schemaScheduleResponse = z.object({
 });
 
 export async function routesSchedule(app: FastifyInstance) {
-  // CREATE
-  app.post("/schedules", {
+  app.post("/schedule", {
     schema: {
       description: "Cria uma nova reserva de quadra",
       tags: ["Reserva"],
@@ -30,41 +27,48 @@ export async function routesSchedule(app: FastifyInstance) {
     },
   }, createScheduleController);
 
-  // GET (via body)
-  app.post("/schedules/get", {
+  app.get("/schedule/:id", {
     schema: {
       description: "Busca uma reserva por ID",
       tags: ["Reserva"],
-      body: z.object({ id: z.string() }),
+      params: z.object({ id: z.string().uuid() }),
       response: {
         200: schemaScheduleResponse,
         400: z.object({ message: z.string() }),
+        404: z.object({ message: z.string() }),
       },
     },
   }, getScheduleController);
 
-  // UPDATE
-  app.put("/schedules/update", {
+  app.put("/schedule/:id", {
     schema: {
       description: "Atualiza dados de uma reserva",
       tags: ["Reserva"],
-      body: schemaCreateSchedule,
+      params: z.object({ id: z.string().uuid() }),
+      body: z.object({
+        dataHoraInicio: z.string().datetime().optional(),
+        dataHoraFim: z.string().datetime().optional(),
+        status: z.string().optional(),
+        userId: z.string().uuid().optional(),
+        courtId: z.string().uuid().optional(),
+      }),
       response: {
         200: schemaScheduleResponse,
         400: z.object({ message: z.string() }),
+        404: z.object({ message: z.string() }),
       },
     },
   }, updateScheduleController);
 
-  // DELETE
-  app.delete("/schedules", {
+  app.delete("/schedule/:id", {
     schema: {
       description: "Remove uma reserva de quadra",
       tags: ["Reserva"],
-      body: z.object({ id: z.string() }),
+      params: z.object({ id: z.string().uuid() }),
       response: {
         204: z.null(),
         400: z.object({ message: z.string() }),
+        404: z.object({ message: z.string() }),
       },
     },
   }, deleteScheduleController);

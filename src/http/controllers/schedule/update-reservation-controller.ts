@@ -3,21 +3,35 @@ import { z } from "zod";
 import { HttpStatusCode } from "axios";
 import { makeUpdateScheduleUseCase } from "@/domain/reservation/@factories/make-update-schedule-use-case";
 
-const schemaUpdateSchedule = z.object({
+const schemaUpdateScheduleParams = z.object({
   id: z.string().uuid(),
+});
+
+const schemaUpdateScheduleBody = z.object({
   dataHoraInicio: z.string().datetime().optional(),
   dataHoraFim: z.string().datetime().optional(),
   status: z.string().optional(),
-  user_id: z.string().uuid().optional(),
-  court_id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(), // CORRIGIDO: consistência na nomenclatura
+  courtId: z.string().uuid().optional(), // CORRIGIDO: consistência na nomenclatura
 });
 
 export async function updateScheduleController(req: FastifyRequest, res: FastifyReply) {
   try {
-    const data = schemaUpdateSchedule.parse(req.body);
+    // CORRIGIDO: separando validação de params e body
+    const { id } = schemaUpdateScheduleParams.parse(req.params);
+    const data = schemaUpdateScheduleBody.parse(req.body);
 
     const updateScheduleUseCase = makeUpdateScheduleUseCase();
-    const { schedule } = await updateScheduleUseCase.execute(data);
+    const { schedule } = await updateScheduleUseCase.execute({ 
+      id, 
+      ...data 
+    });
+
+    if (!schedule) {
+      return res.status(HttpStatusCode.NotFound).send({ 
+        message: "Reserva não encontrada" 
+      });
+    }
 
     return res.status(HttpStatusCode.Ok).send(schedule);
   } catch (error) {
