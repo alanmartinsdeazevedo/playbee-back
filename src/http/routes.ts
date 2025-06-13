@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify"
 import z from "zod";
 import { routesUser } from "./controllers/users/@routes";
+import { routesCourt } from "./controllers/courts/@routes";
+import { routesSchedule } from "./controllers/schedule/@routes";
 
 export const appRoutes = async (app: FastifyInstance) => {
 
@@ -21,4 +23,6 @@ export const appRoutes = async (app: FastifyInstance) => {
     });
   }),
   app.register(routesUser);
+  app.register(routesCourt);
+  app.register(routesSchedule);
 }

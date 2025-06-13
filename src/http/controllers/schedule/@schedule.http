@@ -1,0 +1,46 @@
+@baseURL = http://localhost:3333
+
+# @name CreateSchedule
+POST {{baseURL}}/schedules
+Content-Type: application/json
+
+{
+  "dataHoraInicio": "2025-06-12T14:00:00.000Z",
+  "dataHoraFim": "2025-06-12T15:00:00.000Z",
+  "status": "confirmado",
+  "userId": "ab0b48f1-6add-405e-8568-0d011b05848e",
+  "courtId": "QUADRA_ID_AQUI"
+}
+
+###
+
+# @name GetSchedule
+POST {{baseURL}}/schedules/get
+Content-Type: application/json
+
+{
+  "id": "SCHEDULE_ID_AQUI"
+}
+
+###
+
+# @name UpdateSchedule
+PUT {{baseURL}}/schedules/update
+Content-Type: application/json
+
+{
+  "id": "SCHEDULE_ID_AQUI",
+  "dataHoraInicio": "2025-06-12T16:00:00.000Z",
+  "dataHoraFim": "2025-06-12T17:00:00.000Z",
+  "status": "remarcado"
+}
+
+###
+
+# @name DeleteSchedule
+DELETE {{baseURL}}/schedules
+Content-Type: application/json
+
+{
+  "id": "SCHEDULE_ID_AQUI"
+}

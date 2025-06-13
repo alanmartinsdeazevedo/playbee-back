@@ -1,0 +1,11 @@
+@baseURL = http://localhost:3333
+
+# @name CreateCourt
+POST {{baseURL}}/courts
+Content-Type: application/json
+
+{
+  "nome": "Quadra Central",
+  "tipo": "Futsal",
+  "localizacao": "Praça Cidade Satélite"
+}
