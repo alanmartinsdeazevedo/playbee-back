@@ -3,6 +3,7 @@ import z from "zod";
 import { createCourtController, schemaCreateCourt } from "./create-court-controller";
 import { updateCourtController } from "./update-court-controller";
 import { getAllCourtsController } from "./getall-court-controller";
+import { getCourtByIdController } from "./get-court-by-id-controller";
 import { deleteCourtController } from "./delete-court-controller";
 
 export const schemaCourtResponse = z.object({
@@ -10,10 +11,11 @@ export const schemaCourtResponse = z.object({
     nome: z.string(),
     tipo: z.string(),
     localizacao: z.string()
-})
+});
 
 export async function routesCourt(app: FastifyInstance) {
-    app.post("/courts", {
+    // CREATE
+    app.post("/court", {
         schema: {
             description: "Cria uma nova quadra",
             tags: ["Quadra"],
@@ -23,13 +25,42 @@ export async function routesCourt(app: FastifyInstance) {
                 400: z.object({ message: z.string() }),
             },
         },
-    }, createCourtController)
+    }, createCourtController);
 
-    app.put("/courts/:id", {
+    // GET ALL
+    app.get("/court", {
+        schema: {
+            description: "Lista de todas as quadras",
+            tags: ["Quadra"],
+            response: {
+                200: z.object({
+                    courts: z.array(schemaCourtResponse),
+                }),
+                400: z.object({ message: z.string() }),
+            },
+        }
+    }, getAllCourtsController);
+
+    // GET BY ID - NOVA ROTA
+    app.get("/court/:id", {
+        schema: {
+            description: "Busca uma quadra por ID",
+            tags: ["Quadra"],
+            params: z.object({ id: z.string().uuid() }),
+            response: {
+                200: z.object({ court: schemaCourtResponse }),
+                404: z.object({ message: z.string() }),
+                400: z.object({ message: z.string() }),
+            },
+        }
+    }, getCourtByIdController);
+
+    // UPDATE
+    app.put("/court/:id", {
         schema: {
             description: "Atualiza uma quadra",
             tags: ["Quadra"],
-            params: z.object({id: z.string()}),
+            params: z.object({ id: z.string() }),
             body: z.object({
                 nome: z.string().optional(),
                 tipo: z.string().optional(),
@@ -40,31 +71,18 @@ export async function routesCourt(app: FastifyInstance) {
                 400: z.object({ message: z.string() }),
             },
         },
-    }, updateCourtController)
+    }, updateCourtController);
 
-    app.get("/courts", {
+    // DELETE
+    app.delete("/court/:id", {
         schema: {
-            description: "Lista de todas as quadras",
-            tags: ["Quadra"],
-            response: {
-                200: z.object({
-                    courts: z.array(schemaCourtResponse), // CORRIGIDO: era 'users', agora é 'courts'
-                }),
-                400: z.object({ message: z.string() }),
-            },
-        }
-    }, getAllCourtsController)
-
-    // CORRIGIDO: era '/court/:id', agora é '/courts/:id' para manter consistência
-    app.delete("/courts/:id", {
-        schema:{
             description: "Deleta uma quadra",
             tags: ["Quadra"],
             params: z.object({ id: z.string() }),
             response: {
-              204: z.null(), // No Content
-              400: z.object({ message: z.string() }),
+                204: z.null(), // No Content
+                400: z.object({ message: z.string() }),
             },
         },
-    }, deleteCourtController)
+    }, deleteCourtController);
 }
