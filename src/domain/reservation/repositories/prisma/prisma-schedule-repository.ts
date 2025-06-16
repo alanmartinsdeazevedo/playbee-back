@@ -6,8 +6,6 @@ import { ScheduleReturnFunctionRepository } from "../../types/return/schedule";
 export class PrismaScheduleRepository implements ScheduleRepository {
     async create(schedule: ScheduleParamsFunctionRepository["createSchedule"]): Promise<ScheduleReturnFunctionRepository["getSchedule"]> {
         try {
-            console.log('🔍 Repository: Criando reserva:', schedule);
-            
             const createdSchedule = await prisma.schedule.create({
                 data: {
                     dataHoraInicio: schedule.dataHoraInicio,
@@ -17,8 +15,6 @@ export class PrismaScheduleRepository implements ScheduleRepository {
                     court_id: schedule.courtId
                 }
             });
-            
-            console.log('✅ Repository: Reserva criada:', createdSchedule);
             return createdSchedule;
         } catch (error) {
             console.error('❌ Repository: Erro ao criar reserva:', error);
@@ -27,26 +23,101 @@ export class PrismaScheduleRepository implements ScheduleRepository {
     }
 
     async update(id: string, data: ScheduleParamsFunctionRepository["updateSchedule"]): Promise<ScheduleReturnFunctionRepository["getSchedule"]> {
-        const updatedSchedule = await prisma.schedule.update({
-            where: { id },
-            data: {
-                ...data
-            }
-        });
-        return updatedSchedule;
+        try {
+            console.log('🔍 Repository: Atualizando reserva:', { id, data });
+            
+            const updatedSchedule = await prisma.schedule.update({
+                where: { id },
+                data: {
+                    ...data
+                }
+            });
+            
+            return updatedSchedule;
+        } catch (error) {
+            console.error('❌ Repository: Erro ao atualizar reserva:', error);
+            throw error;
+        }
     }
 
     async getScheduleById(id: string): Promise<ScheduleReturnFunctionRepository["getSchedule"] | null> {
-        const schedule = await prisma.schedule.findUnique({
-            where: { id },
-        });
-        return schedule;
+        try {
+            console.log('🔍 Repository: Buscando reserva por ID:', id);
+            
+            // Validar se o ID é um UUID válido
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                console.log('❌ Repository: ID inválido (não é UUID):', id);
+                return null;
+            }
+            
+            const schedule = await prisma.schedule.findUnique({
+                where: { id },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            email: true
+                        }
+                    },
+                    court: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            tipo: true,
+                            localizacao: true
+                        }
+                    }
+                }
+            });
+            
+            if (schedule) {
+                console.log('✅ Repository: Reserva encontrada:', {
+                    id: schedule.id,
+                    status: schedule.status,
+                    court: schedule.court?.nome,
+                    user: schedule.user?.nome
+                });
+            } else {
+                console.log('❌ Repository: Reserva não encontrada para ID:', id);
+            }
+            
+            return schedule;
+        } catch (error) {
+            console.error('❌ Repository: Erro ao buscar reserva por ID:', error);
+            
+            // Se for erro específico do Prisma
+            if (error instanceof Error) {
+                if (error.message.includes('Invalid `prisma.schedule.findUnique()`')) {
+                    console.error('❌ Erro específico do Prisma:', error.message);
+                    throw new Error('Erro ao buscar reserva no banco de dados');
+                }
+            }
+            
+            throw error;
+        }
     }
 
     async delete(id: string): Promise<void> {
-        await prisma.schedule.delete({
-            where: { id }
-        });
+        try {
+            console.log('🔍 Repository: Deletando reserva com ID:', id);
+            
+            // Verificar se a reserva existe primeiro
+            const existingSchedule = await this.getScheduleById(id);
+            if (!existingSchedule) {
+                throw new Error('Reserva não encontrada');
+            }
+            
+            await prisma.schedule.delete({
+                where: { id }
+            });
+            
+            console.log('✅ Repository: Reserva deletada com sucesso');
+        } catch (error) {
+            console.error('❌ Repository: Erro ao deletar reserva:', error);
+            throw error;
+        }
     }
 
     async findConflictingReservations(
@@ -112,6 +183,23 @@ export class PrismaScheduleRepository implements ScheduleRepository {
             console.log('🔍 Repository: Buscando todas as reservas...');
             
             const schedules = await prisma.schedule.findMany({
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            email: true
+                        }
+                    },
+                    court: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            tipo: true,
+                            localizacao: true
+                        }
+                    }
+                },
                 orderBy: {
                     dataHoraInicio: 'desc'
                 }
@@ -132,6 +220,23 @@ export class PrismaScheduleRepository implements ScheduleRepository {
             const schedules = await prisma.schedule.findMany({
                 where: {
                     user_id: userId
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            email: true
+                        }
+                    },
+                    court: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            tipo: true,
+                            localizacao: true
+                        }
+                    }
                 },
                 orderBy: {
                     dataHoraInicio: 'desc'
