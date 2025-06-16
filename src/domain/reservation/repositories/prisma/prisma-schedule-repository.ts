@@ -26,13 +26,53 @@ export class PrismaScheduleRepository implements ScheduleRepository {
         try {
             console.log('🔍 Repository: Atualizando reserva:', { id, data });
             
+            const updateData: any = {};
+            
+            if (data.dataHoraInicio) {
+                updateData.dataHoraInicio = data.dataHoraInicio;
+            }
+            
+            if (data.dataHoraFim) {
+                updateData.dataHoraFim = data.dataHoraFim;
+            }
+            
+            if (data.status) {
+                updateData.status = data.status;
+            }
+            
+            if (data.user_id) {
+                updateData.user_id = data.user_id;
+            }
+            
+            if (data.court_id) {
+                updateData.court_id = data.court_id;
+            }
+
+            console.log('✅ Dados filtrados para atualização:', updateData);
+            
             const updatedSchedule = await prisma.schedule.update({
                 where: { id },
-                data: {
-                    ...data
+                data: updateData,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            email: true
+                        }
+                    },
+                    court: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            tipo: true,
+                            localizacao: true
+                        }
+                    }
                 }
             });
             
+            console.log('✅ Repository: Reserva atualizada com sucesso');
             return updatedSchedule;
         } catch (error) {
             console.error('❌ Repository: Erro ao atualizar reserva:', error);

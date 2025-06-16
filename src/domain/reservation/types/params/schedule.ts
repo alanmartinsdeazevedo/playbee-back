@@ -1,6 +1,4 @@
-import { Prisma } from "@prisma/client" 
-
-export interface ScheduleParamsFunctionRepository{
+export interface ScheduleParamsFunctionRepository {
     createSchedule: {
         dataHoraInicio: Date;
         dataHoraFim: Date;
@@ -8,6 +6,12 @@ export interface ScheduleParamsFunctionRepository{
         userId: string;
         courtId: string;
     };
-    updateSchedule: Prisma.ScheduleUncheckedUpdateInput,
-    findById: string
+    updateSchedule: {
+        dataHoraInicio?: Date;
+        dataHoraFim?: Date;
+        status?: string;
+        user_id?: string;
+        court_id?: string;
+    };
+    findById: string;
 }
