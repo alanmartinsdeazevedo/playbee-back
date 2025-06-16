@@ -1,9 +1,12 @@
+// src/http/controllers/schedule/@routes.ts
+
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { updateScheduleController } from "./update-reservation-controller";
 import { deleteScheduleController } from "./delete-reservation-controller";
 import { getScheduleController } from "./get-reservation-controller";
 import { createScheduleController, schemaCreateSchedule } from "./create-reservation-controller";
+import { getAllReservationsController } from "./get-all-reservations-controller";
 
 const schemaScheduleResponse = z.object({
   id: z.string(),
@@ -22,10 +25,31 @@ export async function routesSchedule(app: FastifyInstance) {
       body: schemaCreateSchedule,
       response: {
         201: schemaScheduleResponse,
-        400: z.object({ message: z.string() }),
+        400: z.object({ 
+          message: z.string(),
+          errors: z.array(z.any()).optional()
+        }),
+        500: z.object({ message: z.string() }),
       },
     },
   }, createScheduleController);
+
+  app.get("/schedule", {
+    schema: {
+      description: "Lista todas as reservas",
+      tags: ["Reserva"],
+      querystring: z.object({
+        userId: z.string().uuid().optional(),
+      }).optional(),
+      response: {
+        200: z.object({
+          schedules: z.array(schemaScheduleResponse),
+        }),
+        400: z.object({ message: z.string() }),
+        500: z.object({ message: z.string() }),
+      },
+    },
+  }, getAllReservationsController);
 
   app.get("/schedule/:id", {
     schema: {
@@ -36,6 +60,7 @@ export async function routesSchedule(app: FastifyInstance) {
         200: schemaScheduleResponse,
         400: z.object({ message: z.string() }),
         404: z.object({ message: z.string() }),
+        500: z.object({ message: z.string() }),
       },
     },
   }, getScheduleController);
@@ -56,6 +81,7 @@ export async function routesSchedule(app: FastifyInstance) {
         200: schemaScheduleResponse,
         400: z.object({ message: z.string() }),
         404: z.object({ message: z.string() }),
+        500: z.object({ message: z.string() }),
       },
     },
   }, updateScheduleController);
@@ -69,6 +95,7 @@ export async function routesSchedule(app: FastifyInstance) {
         204: z.null(),
         400: z.object({ message: z.string() }),
         404: z.object({ message: z.string() }),
+        500: z.object({ message: z.string() }),
       },
     },
   }, deleteScheduleController);
