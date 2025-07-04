@@ -12,7 +12,23 @@ export async function getAllReservationsController(req: FastifyRequest, res: Fas
     console.log('🔍 Buscando todas as reservas...');
     
     const query = schemaQuery.parse(req.query);
-    const userId = query?.userId;
+    const authenticatedUser = req.user;
+
+    if (!authenticatedUser) {
+      return res.status(HttpStatusCode.Unauthorized).send({
+        message: "Usuário não autenticado"
+      });
+    }
+
+    let userId: string | undefined;
+
+    // Se o usuário é admin, pode buscar por qualquer userId ou todas as reservas
+    if (authenticatedUser.role === 'admin') {
+      userId = query?.userId; // Pode ser undefined para buscar todas
+    } else {
+      // Se não é admin, só pode ver suas próprias reservas
+      userId = authenticatedUser.userId;
+    }
 
     const getAllSchedulesUseCase = makeGetAllSchedulesUseCase();
     const result = await getAllSchedulesUseCase.execute({ userId });

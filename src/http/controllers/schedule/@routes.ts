@@ -7,6 +7,7 @@ import { deleteScheduleController } from "./delete-reservation-controller";
 import { getScheduleController } from "./get-reservation-controller";
 import { createScheduleController, schemaCreateSchedule } from "./create-reservation-controller";
 import { getAllReservationsController } from "./get-all-reservations-controller";
+import { authMiddleware } from "../../middlewares/auth";
 
 const schemaScheduleResponse = z.object({
   id: z.string(),
@@ -35,6 +36,7 @@ export async function routesSchedule(app: FastifyInstance) {
   }, createScheduleController);
 
   app.get("/schedule", {
+    preHandler: [authMiddleware],
     schema: {
       description: "Lista todas as reservas",
       tags: ["Reserva"],
@@ -46,6 +48,7 @@ export async function routesSchedule(app: FastifyInstance) {
           schedules: z.array(schemaScheduleResponse),
         }),
         400: z.object({ message: z.string() }),
+        401: z.object({ message: z.string() }),
         500: z.object({ message: z.string() }),
       },
     },
