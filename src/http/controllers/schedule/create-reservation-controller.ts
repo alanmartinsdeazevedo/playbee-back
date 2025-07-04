@@ -9,7 +9,6 @@ export const schemaCreateSchedule = z.object({
   dataHoraInicio: z.string().datetime(),
   dataHoraFim: z.string().datetime(), 
   status: z.string(),
-  userId: z.string().uuid(),
   courtId: z.string().uuid(),
 });
 
@@ -17,16 +16,23 @@ export async function createScheduleController(req: FastifyRequest, res: Fastify
   try {
     console.log('🔍 Dados recebidos no controller:', req.body);
     
-    const { dataHoraInicio, dataHoraFim, status, userId, courtId } = schemaCreateSchedule.parse(req.body);
+    const { dataHoraInicio, dataHoraFim, status, courtId } = schemaCreateSchedule.parse(req.body);
+    const authenticatedUser = req.user;
 
-    console.log('✅ Dados validados:', { dataHoraInicio, dataHoraFim, status, userId, courtId });
+    if (!authenticatedUser) {
+      return res.status(HttpStatusCode.Unauthorized).send({
+        message: "Usuário não autenticado"
+      });
+    }
+
+    console.log('✅ Dados validados:', { dataHoraInicio, dataHoraFim, status, courtId });
 
     const createScheduleUseCase = makeCreateScheduleUseCase();
     const result = await createScheduleUseCase.execute({
       dataHoraInicio: new Date(dataHoraInicio),
       dataHoraFim: new Date(dataHoraFim),
       status,
-      userId,
+      userId: authenticatedUser.userId, // Usar o userId do usuário autenticado
       courtId
     });
 

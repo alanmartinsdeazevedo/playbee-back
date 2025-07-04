@@ -7,6 +7,7 @@ import { deleteScheduleController } from "./delete-reservation-controller";
 import { getScheduleController } from "./get-reservation-controller";
 import { createScheduleController, schemaCreateSchedule } from "./create-reservation-controller";
 import { getAllReservationsController } from "./get-all-reservations-controller";
+import { cancelScheduleController } from "./cancel-reservation-controller";
 import { authMiddleware } from "../../middlewares/auth";
 
 const schemaScheduleResponse = z.object({
@@ -20,6 +21,7 @@ const schemaScheduleResponse = z.object({
 
 export async function routesSchedule(app: FastifyInstance) {
   app.post("/schedule", {
+    preHandler: [authMiddleware],
     schema: {
       description: "Cria uma nova reserva de quadra",
       tags: ["Reserva"],
@@ -30,6 +32,7 @@ export async function routesSchedule(app: FastifyInstance) {
           message: z.string(),
           errors: z.array(z.any()).optional()
         }),
+        401: z.object({ message: z.string() }),
         500: z.object({ message: z.string() }),
       },
     },
@@ -69,6 +72,7 @@ export async function routesSchedule(app: FastifyInstance) {
   }, getScheduleController);
 
   app.put("/schedule/:id", {
+    preHandler: [authMiddleware],
     schema: {
       description: "Atualiza dados de uma reserva",
       tags: ["Reserva"],
@@ -83,6 +87,7 @@ export async function routesSchedule(app: FastifyInstance) {
       response: {
         200: schemaScheduleResponse,
         400: z.object({ message: z.string() }),
+        401: z.object({ message: z.string() }),
         404: z.object({ message: z.string() }),
         500: z.object({ message: z.string() }),
       },
@@ -90,6 +95,7 @@ export async function routesSchedule(app: FastifyInstance) {
   }, updateScheduleController);
 
   app.delete("/schedule/:id", {
+    preHandler: [authMiddleware],
     schema: {
       description: "Remove uma reserva de quadra",
       tags: ["Reserva"],
@@ -97,9 +103,29 @@ export async function routesSchedule(app: FastifyInstance) {
       response: {
         204: z.null(),
         400: z.object({ message: z.string() }),
+        401: z.object({ message: z.string() }),
         404: z.object({ message: z.string() }),
         500: z.object({ message: z.string() }),
       },
     },
   }, deleteScheduleController);
+
+  app.patch("/schedule/:id/cancel", {
+    preHandler: [authMiddleware],
+    schema: {
+      description: "Cancela uma reserva",
+      tags: ["Reserva"],
+      params: z.object({ id: z.string().uuid() }),
+      response: {
+        200: z.object({
+          message: z.string(),
+          schedule: schemaScheduleResponse,
+        }),
+        400: z.object({ message: z.string() }),
+        401: z.object({ message: z.string() }),
+        404: z.object({ message: z.string() }),
+        500: z.object({ message: z.string() }),
+      },
+    },
+  }, cancelScheduleController);
 }

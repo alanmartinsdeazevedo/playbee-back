@@ -9,4 +9,5 @@ export interface ScheduleRepository{
     findConflictingReservations(courtId: string, dataHoraInicio: Date, dataHoraFim: Date, excludeId?: string): Promise<ScheduleReturnFunctionRepository["getSchedule"][]>
     getAllSchedules(): Promise<ScheduleReturnFunctionRepository["getSchedule"][]>
     getSchedulesByUser(userId: string): Promise<ScheduleReturnFunctionRepository["getSchedule"][]>
+    findUserReservationsByCourtTypeAndDate(userId: string, courtType: string, date: Date, excludeId?: string): Promise<ScheduleReturnFunctionRepository["getSchedule"][]>
 }

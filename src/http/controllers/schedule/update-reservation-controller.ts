@@ -23,6 +23,13 @@ export async function updateScheduleController(req: FastifyRequest, res: Fastify
 
     const { id } = schemaUpdateScheduleParams.parse(req.params);
     const data = schemaUpdateScheduleBody.parse(req.body);
+    const authenticatedUser = req.user;
+
+    if (!authenticatedUser) {
+      return res.status(HttpStatusCode.Unauthorized).send({
+        message: "Usuário não autenticado"
+      });
+    }
 
     console.log('✅ Dados validados:', { id, data });
 
@@ -54,6 +61,7 @@ export async function updateScheduleController(req: FastifyRequest, res: Fastify
     const updateScheduleUseCase = makeUpdateScheduleUseCase();
     const { schedule } = await updateScheduleUseCase.execute({ 
       id, 
+      userId: authenticatedUser.role === 'admin' ? undefined : authenticatedUser.userId, // Admin pode editar qualquer reserva
       ...mappedData 
     });
 

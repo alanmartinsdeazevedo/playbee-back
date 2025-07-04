@@ -290,4 +290,54 @@ export class PrismaScheduleRepository implements ScheduleRepository {
             throw error;
         }
     }
+
+    async findUserReservationsByCourtTypeAndDate(
+        userId: string, 
+        courtType: string, 
+        date: Date, 
+        excludeId?: string
+    ): Promise<ScheduleReturnFunctionRepository["getSchedule"][]> {
+        try {
+            console.log('🔍 Repository: Verificando reservas do usuário no mesmo dia:', { userId, courtType, date });
+            
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+            
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+            
+            const reservations = await prisma.schedule.findMany({
+                where: {
+                    user_id: userId,
+                    id: excludeId ? { not: excludeId } : undefined,
+                    status: {
+                        notIn: ['cancelado', 'cancelled']
+                    },
+                    dataHoraInicio: {
+                        gte: startOfDay,
+                        lte: endOfDay
+                    },
+                    court: {
+                        tipo: courtType
+                    }
+                },
+                include: {
+                    court: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            tipo: true,
+                            localizacao: true
+                        }
+                    }
+                }
+            });
+            
+            console.log('✅ Repository: Reservas encontradas do mesmo tipo no dia:', reservations.length);
+            return reservations;
+        } catch (error) {
+            console.error('❌ Repository: Erro ao verificar reservas do usuário no mesmo dia:', error);
+            throw error;
+        }
+    }
 }
