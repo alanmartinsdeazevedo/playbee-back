@@ -43,7 +43,7 @@ jobs:
         docker build -f Dockerfile -t ${{ secrets.DOCKER_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }} .
         docker build -f Dockerfile -t ${{ secrets.DOCKER_IMAGE_NAME }}:latest .
 
-    # Push para Docker Hub
+    # Push Docker Hub
     - name: Push Docker
       run: |
         echo "📤 Pushing PlayBee Backend version ${{ steps.version.outputs.VERSION }}"
