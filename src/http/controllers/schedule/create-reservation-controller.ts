@@ -33,7 +33,8 @@ export async function createScheduleController(req: FastifyRequest, res: Fastify
       dataHoraFim: new Date(dataHoraFim),
       status,
       userId: authenticatedUser.userId, // Usar o userId do usuário autenticado
-      courtId
+      courtId,
+      userRole: authenticatedUser.role // Passar o role para validação
     });
 
     console.log('✅ Use Case result:', result);

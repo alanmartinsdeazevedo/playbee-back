@@ -16,7 +16,7 @@ app.register(cors, {
     origin: [
         'http://localhost:3000',        // Frontend
         'http://127.0.0.1:3000',        // localhost
-        'http://play.beezes.com.br'     // Produção
+        'https://play.beezes.com.br'     // Produção
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

@@ -10,4 +10,5 @@ export interface ScheduleRepository{
     getAllSchedules(): Promise<ScheduleReturnFunctionRepository["getSchedule"][]>
     getSchedulesByUser(userId: string): Promise<ScheduleReturnFunctionRepository["getSchedule"][]>
     findUserReservationsByCourtTypeAndDate(userId: string, courtType: string, date: Date, excludeId?: string): Promise<ScheduleReturnFunctionRepository["getSchedule"][]>
+    countActiveReservationsByUser(userId: string): Promise<number>
 }

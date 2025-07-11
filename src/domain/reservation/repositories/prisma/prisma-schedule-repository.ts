@@ -340,4 +340,29 @@ export class PrismaScheduleRepository implements ScheduleRepository {
             throw error;
         }
     }
+
+    async countActiveReservationsByUser(userId: string): Promise<number> {
+        try {
+            console.log('🔍 Repository: Contando reservas ativas do usuário:', userId);
+            
+            const now = new Date();
+            const activeCount = await prisma.schedule.count({
+                where: {
+                    user_id: userId,
+                    status: {
+                        notIn: ['cancelado', 'cancelled']
+                    },
+                    dataHoraFim: {
+                        gte: now // Reservas que ainda não terminaram
+                    }
+                }
+            });
+            
+            console.log('✅ Repository: Reservas ativas encontradas:', activeCount);
+            return activeCount;
+        } catch (error) {
+            console.error('❌ Repository: Erro ao contar reservas ativas:', error);
+            throw error;
+        }
+    }
 }

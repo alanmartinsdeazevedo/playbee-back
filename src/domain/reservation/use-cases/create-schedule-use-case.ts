@@ -10,6 +10,7 @@ interface CreateScheduleUseCaseRequest{
     status: string;
     userId: string;
     courtId: string;
+    userRole?: string; // Para verificar se é admin
 }
 
 interface CreateScheduleUseCaseResponse{
@@ -28,6 +29,16 @@ export class CreateScheduleUseCase{
             const court = await this.courtRepository.getCourtById(data.courtId);
             if (!court) {
                 throw new Error("Quadra não encontrada");
+            }
+
+            // Verificar limite de reservas ativas para usuários normais
+            if (data.userRole !== 'admin') {
+                const activeReservationsCount = await this.scheduleRepository.countActiveReservationsByUser(data.userId);
+                
+                if (activeReservationsCount >= 2) {
+                    console.log('❌ Use Case: Usuário já tem 2 reservas ativas:', activeReservationsCount);
+                    throw new Error("Você já possui o limite máximo de 2 reservas ativas. Cancele uma reserva existente para fazer uma nova.");
+                }
             }
 
             // Verificar conflitos de horário na mesma quadra
